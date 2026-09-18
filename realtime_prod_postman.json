@@ -1,0 +1,120 @@
+{
+  "info": {
+    "name": "KOBAN - Realtime Bullying (dev1 via /koban/dev)",
+    "description": "Partner-facing flow through the production edge router to the developer PC. base=https://dev1.m4d.iti.gr, prefix /koban/dev. Step 1 gets a token (saved to {{access_token}}), Step 2 calls the API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base",
+      "value": "https://dev1.m4d.iti.gr"
+    },
+    {
+      "key": "prefix",
+      "value": "/koban/dev"
+    },
+    {
+      "key": "client_id",
+      "value": "centric-appfactory"
+    },
+    {
+      "key": "client_secret",
+      "value": "YOUR_CLIENT_SECRET"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Get Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var j = pm.response.json();",
+              "pm.collectionVariables.set('access_token', j.access_token);",
+              "pm.test('status 200', function(){ pm.response.to.have.status(200); });",
+              "pm.test('has access_token', function(){ pm.expect(j.access_token).to.be.a('string'); });",
+              "console.log('token saved, expires_in=', j.expires_in);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "grant_type",
+              "value": "client_credentials"
+            },
+            {
+              "key": "client_id",
+              "value": "{{client_id}}"
+            },
+            {
+              "key": "client_secret",
+              "value": "{{client_secret}}"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base}}{{prefix}}/text_analysis/token",
+          "host": [
+            "{{base}}{{prefix}}"
+          ],
+          "path": [
+            "text_analysis",
+            "token"
+          ]
+        }
+      }
+    },
+    {
+      "name": "2. Realtime Bullying (multi-screenshot)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"dev-test-1\",\n  \"role\": \"user\",\n  \"content\": [\n    {\n      \"type\": \"text\",\n      \"text\": \"screenshots from the group chat\"\n    },\n    {\n      \"type\": \"image\",\n      \"source\": {\n        \"mediaId\": \"s1/raw\",\n        \"mimeType\": \"Image\"\n      },\n      \"ocr\": \"GO BACK TO YOUR COUNTRY\",\n      \"chat\": \"{Other: you don't belong here},{ME: leave me alone}\"\n    },\n    {\n      \"type\": \"image\",\n      \"source\": {\n        \"mediaId\": \"s2/raw\",\n        \"mimeType\": \"Image\"\n      },\n      \"ocr\": \"NOBODY LIKES YOU\",\n      \"chat\": \"{Other: everyone is laughing at you},{ME: stop it}\"\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base}}{{prefix}}/text_analysis/realtime_bullying",
+          "host": [
+            "{{base}}{{prefix}}"
+          ],
+          "path": [
+            "text_analysis",
+            "realtime_bullying"
+          ]
+        }
+      }
+    }
+  ]
+}

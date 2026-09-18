@@ -1,0 +1,118 @@
+{
+  "info": {
+    "name": "KOBAN - Textual Analysis (clean URLs)",
+    "description": "Partner-facing flow via the gateway. Step 1 gets a token from the clean /koban/text_analysis/token endpoint (no Keycloak internals). Step 2 calls the API. Change {{base}} to your environment (local :85, or https://dev1.m4d.iti.gr).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base",
+      "value": "http://localhost:85"
+    },
+    {
+      "key": "client_id",
+      "value": "centric-appfactory"
+    },
+    {
+      "key": "client_secret",
+      "value": "YOUR_CLIENT_SECRET"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Get Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var j = pm.response.json();",
+              "pm.collectionVariables.set('access_token', j.access_token);",
+              "pm.test('status 200', function(){ pm.response.to.have.status(200); });",
+              "pm.test('has access_token', function(){ pm.expect(j.access_token).to.be.a('string'); });",
+              "console.log('token saved, expires_in=', j.expires_in);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "grant_type",
+              "value": "client_credentials"
+            },
+            {
+              "key": "client_id",
+              "value": "{{client_id}}"
+            },
+            {
+              "key": "client_secret",
+              "value": "{{client_secret}}"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base}}/koban/text_analysis/token",
+          "host": [
+            "{{base}}"
+          ],
+          "path": [
+            "koban",
+            "text_analysis",
+            "token"
+          ]
+        }
+      }
+    },
+    {
+      "name": "2. Realtime Bullying (multi-screenshot)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"b7c1e2a0-3f45-4a10-9c22-aa11bb22cc33\",\n  \"role\": \"user\",\n  \"content\": [\n    {\n      \"type\": \"text\",\n      \"text\": \"screenshots from the group chat\"\n    },\n    {\n      \"type\": \"image\",\n      \"source\": {\n        \"mediaId\": \"shot-1/raw\",\n        \"mimeType\": \"Image\"\n      },\n      \"ocr\": \"GO BACK TO YOUR COUNTRY\",\n      \"chat\": \"{Other: you don't belong here},{ME: leave me alone}\"\n    },\n    {\n      \"type\": \"image\",\n      \"source\": {\n        \"mediaId\": \"shot-2/raw\",\n        \"mimeType\": \"Image\"\n      },\n      \"ocr\": \"NOBODY LIKES YOU\",\n      \"chat\": \"{Other: everyone is laughing at you},{ME: stop it}\"\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base}}/koban/text_analysis/realtime_bullying",
+          "host": [
+            "{{base}}"
+          ],
+          "path": [
+            "koban",
+            "text_analysis",
+            "realtime_bullying"
+          ]
+        }
+      }
+    }
+  ]
+}
