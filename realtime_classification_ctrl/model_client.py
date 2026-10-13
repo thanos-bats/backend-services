@@ -11,18 +11,8 @@ logger = logging.getLogger(__name__)
 # Set to True later to reactivate the real realtime bullying model call.
 ENABLE_REALTIME_MODEL = False
 
-# Labels returned by the real hate speech detection model.
+# Labels returned by the hate speech detection model (and by the placeholder).
 MODEL_LABELS = ["hate-speech", "non-hate-speech"]
-
-# Classes used by the placeholder while the real model is disabled.
-REALTIME_CLASSES = [
-    "bullying",
-    "physical appearance",
-    "racism/xenophobia",
-    "LGBTIphobia",
-    "physical disability",
-    "Intellectual disability",
-]
 
 
 def _parse_prediction(hs_data: Dict[str, Any]) -> Tuple[str, float]:
@@ -51,7 +41,7 @@ def _call_model(api_url: str, payload: Dict[str, Any]) -> Dict[str, Any]:
 
 def run_realtime_classification_model(simple: SimpleConversation) -> RealtimeClassificationResponse:
     """
-    Bullying/racism classification for the current message.
+    Hate speech classification for the current message.
 
     The utterances of every screenshot attached to the message are merged into
     a single list and classified in one model call, so multiple screenshots
@@ -89,7 +79,7 @@ def run_realtime_classification_model(simple: SimpleConversation) -> RealtimeCla
         # Placeholder output while the realtime model is inactive.
         seed = f"{simple.id or ''}:{merged_text}"
         rng = random.Random(seed)
-        class_name = rng.choice(REALTIME_CLASSES)
+        class_name = rng.choice(MODEL_LABELS)
         confidence = rng.random()
         logger.info("Model disabled, returning placeholder prediction")
 

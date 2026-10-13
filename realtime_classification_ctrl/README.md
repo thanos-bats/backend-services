@@ -8,10 +8,9 @@ The controller only looks at images. Call it only when the message has at least 
 
 Two steps: get a token, then send the message.
 
-| Environment | Base URL |
-|---|---|
-| Local | `http://localhost:8085/koban` |
-| Dev (dev1) | `https://dev1.m4d.iti.gr/koban/dev` |
+Base URL: `https://dev1.m4d.iti.gr/koban/dev`
+
+The `/dev` part is temporary. After the controller is deployed on the server, the base URL will be `https://dev1.m4d.iti.gr/koban`.
 
 ### Step 1: get a token
 
@@ -27,7 +26,7 @@ Content-Type: application/x-www-form-urlencoded
 | `client_secret` | your client secret |
 
 ```bash
-curl -X POST "http://localhost:8085/koban/text_analysis/token" \
+curl -X POST "https://dev1.m4d.iti.gr/koban/dev/text_analysis/token" \
   -d grant_type=client_credentials \
   -d client_id=YOUR_CLIENT_ID \
   -d client_secret=YOUR_CLIENT_SECRET
@@ -44,7 +43,7 @@ Content-Type: application/json
 ```
 
 ```bash
-curl -X POST "http://localhost:8085/koban/text_analysis/realtime_bullying" \
+curl -X POST "https://dev1.m4d.iti.gr/koban/dev/text_analysis/realtime_bullying" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d @model_contract/controller_request.sample.json
@@ -109,7 +108,7 @@ When a message has several images, all their chats are joined in order and class
 | `class` | `hate-speech` or `non-hate-speech`. |
 | `confidence_score` | Between 0 and 1. |
 
-> The real model is currently switched off. Until it is switched on, the controller returns a random placeholder class and score.
+> The real model is not connected yet. Until it is, the controller returns one of the two classes at random, with a random score.
 
 ## Errors
 
