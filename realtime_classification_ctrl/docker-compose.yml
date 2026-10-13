@@ -10,8 +10,8 @@ services:
     env_file:
       - .env
     environment:
-      # Keycloak reached by its container name on the shared koban network.
-      KEYCLOAK_URL: "http://keycloak:8080/koban/auth"
+      # Central Keycloak on dev1: tokens are issued and verified there.
+      KEYCLOAK_URL: "https://dev1.m4d.iti.gr/koban/auth"
       KEYCLOAK_REALM: "koban"
       # Εσωτερικό Docker DNS για το ML model
       REALTIME_BULLYING_API_URL: "http://koban_bullying:13333/grooming_taxonomy_both"
