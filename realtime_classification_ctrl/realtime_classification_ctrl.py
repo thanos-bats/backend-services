@@ -7,6 +7,11 @@ from conversation_service import simplify_conversation
 from model_client import run_realtime_classification_model
 from schemas import RealtimeClassificationRequest, RealtimeClassificationResponse
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+)
+
 app = FastAPI(title="Realtime Bullying Classification API")
 logger = logging.getLogger(__name__)
 
@@ -20,11 +25,15 @@ def realtime_bullying_endpoint(
     raw: RealtimeClassificationRequest,
     token_payload: Dict[str, Any] = Depends(verify_jwt_token),
 ) -> RealtimeClassificationResponse:
-    logger.info(f"Received /realtime_bullying request from sub: {token_payload.get('sub')}")
-    simple = simplify_conversation(raw.model_dump())
+    body = raw.model_dump()
+    logger.info(f"Received /realtime_bullying from sub={token_payload.get('sub')}: {body}")
+    simple = simplify_conversation(body)
     try:
-        return run_realtime_classification_model(simple)
+        result = run_realtime_classification_model(simple)
+        logger.info(f"Response id={simple.id}: {result.model_dump(by_alias=True, exclude_none=True)}")
+        return result
     except ValueError as exc:
+        logger.warning(f"Rejected id={simple.id} with 400: {exc}")
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
         logger.exception("Failed processing /realtime_bullying")

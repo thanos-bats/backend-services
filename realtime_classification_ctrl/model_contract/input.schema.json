@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RealtimeHateSpeechModelInput",
+  "description": "Payload POSTed by realtime_classification_ctrl to the hate speech detection model. The chat lines of all screenshots attached to the current message are collected and classified in one call.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": ["string", "null"],
+      "description": "Correlation id of the message (echoed back in the response). May be null."
+    },
+    "text": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Chat lines extracted from every screenshot of the current message, as a list of utterances (speakers stripped), in conversation order."
+    }
+  },
+  "required": ["text"],
+  "additionalProperties": false
+}

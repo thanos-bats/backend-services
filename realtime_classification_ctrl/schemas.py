@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -6,8 +6,10 @@ from pydantic import BaseModel, ConfigDict, Field
 class SimpleConversation(BaseModel):
     id: Optional[str] = None
     text: str
-    # mediaId -> chat lines extracted from image OCR/analysis
-    ocr: Optional[Dict[str, str]] = None
+    # Number of image attachments in the message, with or without chat analysis
+    image_count: int = 0
+    # mediaId -> utterances extracted from the image chat analysis
+    ocr: Optional[Dict[str, List[str]]] = None
 
 
 class ImagePrediction(BaseModel):

@@ -39,9 +39,8 @@ def _is_image_content(c: Dict[str, Any]) -> bool:
     return c.get("type") == "image" or c.get("_class", "").endswith("ConversationMessageImageContent")
 
 
-def _extract_image_chat_text(chat: str) -> str:
-    utterances = [utt for pair in parse_image_chat(chat) for utt in pair.values()]
-    return "\n".join(utterances)
+def _extract_image_chat_utterances(chat: str) -> List[str]:
+    return [utt for pair in parse_image_chat(chat) for utt in pair.values()]
 
 
 def simplify_conversation(raw: Dict[str, Any]) -> SimpleConversation:
@@ -50,12 +49,14 @@ def simplify_conversation(raw: Dict[str, Any]) -> SimpleConversation:
 
     Realtime classification runs per-message: `raw` is the message just posted,
     with its `content` array holding the text plus one or more image
-    attachments. Every screenshot's chat text is extracted into the `ocr` map
-    (mediaId -> extracted chat text) so the model client can treat all of them
-    as one conversation.
+    attachments. Every screenshot's chat is extracted into the `ocr` map
+    (mediaId -> list of utterances) so the model client can treat all of them
+    as one conversation. `image_count` counts every image attachment, so the
+    caller can tell "no image" apart from "image without chat analysis".
     """
     user_lines: List[str] = []
-    chat_lines: Dict[str, str] = {}
+    chat_lines: Dict[str, List[str]] = {}
+    image_count = 0
 
     for c in raw.get("content") or []:
         if c.get("type") == "text":
@@ -63,19 +64,19 @@ def simplify_conversation(raw: Dict[str, Any]) -> SimpleConversation:
             if t:
                 user_lines.append(t)
 
-        if not _is_image_content(c) or not c.get("chat"):
+        if not _is_image_content(c):
             continue
-        media_id = c.get("source", {}).get("mediaId")
-        if not media_id:
+        image_count += 1
+        if not c.get("chat"):
             continue
-        existing = chat_lines.get(media_id, "")
-        new_text = _extract_image_chat_text(c["chat"])
-        chat_lines[media_id] = f"{existing}\n{new_text}".strip() if existing else new_text
-    print(f"chat_lines: {chat_lines}")
-    print(f"user_lines: {user_lines}")
+        media_id = (c.get("source") or {}).get("mediaId") or f"image_{image_count}"
+        utterances = _extract_image_chat_utterances(c["chat"])
+        if utterances:
+            chat_lines.setdefault(media_id, []).extend(utterances)
 
     return SimpleConversation(
         id=raw.get("id"),
         text="\n".join(user_lines),
+        image_count=image_count,
         ocr=chat_lines if chat_lines else None,
     )

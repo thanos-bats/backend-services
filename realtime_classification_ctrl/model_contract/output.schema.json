@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RealtimeHateSpeechModelOutput",
+  "description": "Response the hate speech detection model must return to realtime_classification_ctrl.",
+  "type": "object",
+  "properties": {
+    "prediction": {
+      "type": "string",
+      "enum": ["hate-speech", "no-hate-speech", "bullying", "no-bullying"],
+      "description": "Predicted label. 'bullying' maps to 'hate-speech' and 'no-bullying' maps to 'no-hate-speech'. Any other value raises an error in the controller."
+    },
+    "confidence": {
+      "type": "object",
+      "description": "Map of label -> probability as a JSON object. Must contain the key matching 'prediction' (e.g. 'hate-speech' or 'bullying').",
+      "additionalProperties": { "type": "number" }
+    }
+  },
+  "required": ["prediction", "confidence"],
+  "additionalProperties": true
+}

@@ -1,10 +1,12 @@
-from typing import Any, Dict, Tuple
-import ast
+from typing import Any, Dict, List, Tuple
+import logging
 import random
 import requests
 
 from config import REALTIME_BULLYING_API_URL, REALTIME_BULLYING_OCR_API_URL
 from schemas import RealtimeClassificationResponse, SimpleConversation
+
+logger = logging.getLogger(__name__)
 
 # Set to True later to reactivate the real realtime bullying model call.
 ENABLE_REALTIME_MODEL = False
@@ -22,11 +24,10 @@ REALTIME_CLASSES = [
 
 def _parse_prediction(hs_data: Dict[str, Any]) -> Tuple[str, float]:
     prediction = (hs_data.get("prediction") or "").strip().lower()
-    probs_raw = hs_data.get("probabilities") or ""
-    probs: Dict[str, float] = {}
-
-    if isinstance(probs_raw, str) and probs_raw:
-        probs = ast.literal_eval(probs_raw)
+    # label -> probability, sent by the model as a JSON object
+    probs: Dict[str, float] = hs_data.get("confidence") or {}
+    if not isinstance(probs, dict):
+        raise RuntimeError(f"Unexpected confidence format: {probs!r}")
 
     # Map των labels του bullying μοντέλου στα αναμενόμενα labels του API
     if prediction in ["hate-speech", "bullying"]:
@@ -57,34 +58,37 @@ def run_realtime_classification_model(simple: SimpleConversation) -> RealtimeCla
     """
     Bullying/racism classification for the current message.
 
-    Every screenshot attached to the message is merged into a single blob of
-    extracted text and classified in one model call, so multiple screenshots
+    The utterances of every screenshot attached to the message are merged into
+    a single list and classified in one model call, so multiple screenshots
     are treated as one conversation and the endpoint stays within its latency
     budget.
 
     For the current phase the real model is intentionally disabled, and we
     return a seeded random placeholder class + confidence.
     """
-    ocr_map: Dict[str, str] = simple.ocr or {}
-    if not ocr_map:
-        raise ValueError("No images found in message. Please provide at least one image.")
+    if simple.image_count == 0:
+        raise ValueError("No image attached.")
 
-    # Merge every screenshot's extracted text into one conversation.
-    merged_text = "\n".join(text for text in ocr_map.values() if text).strip()
+    ocr_map: Dict[str, List[str]] = simple.ocr or {}
+    if not ocr_map:
+        raise ValueError("No chat analysis found for the attached image(s).")
+
+    # Merge every screenshot's utterances into one conversation.
+    utterances: List[str] = [utt for lines in ocr_map.values() for utt in lines]
+    merged_text = "\n".join(utterances)
 
     payload: Dict[str, Any] = {
         "id": simple.id,
-        "text": merged_text,
+        "text": utterances,
     }
-    print(f"[Realtime model] Payload media_ids={list(ocr_map.keys())}: {payload}")
+    logger.info(f"Model input ({len(ocr_map)} image(s) with chat): {payload}")
 
     if ENABLE_REALTIME_MODEL:
         try:
             hs_data = _call_model(REALTIME_BULLYING_OCR_API_URL, payload)
-            print(f"[Realtime model] Response: {hs_data}")
+            logger.info(f"Model output: {hs_data}")
             class_name, confidence = _parse_prediction(hs_data)
         except Exception as exc:
-            print(f"[Realtime model] Failed: {exc!r}")
             raise RuntimeError(f"Realtime bullying model failed: {exc}") from exc
     else:
         # Placeholder output while the realtime model is inactive.
@@ -92,7 +96,7 @@ def run_realtime_classification_model(simple: SimpleConversation) -> RealtimeCla
         rng = random.Random(seed)
         class_name = rng.choice(REALTIME_CLASSES)
         confidence = rng.random()
-        print(f"[Realtime model] Placeholder prediction: {class_name} ({confidence})")
+        logger.info("Model disabled, returning placeholder prediction")
 
     return RealtimeClassificationResponse(
         id=simple.id,

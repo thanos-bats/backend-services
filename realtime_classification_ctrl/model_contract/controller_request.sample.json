@@ -1,0 +1,26 @@
+{
+  "id": "1d2e3f40-aa11-4b22-9c33-5566778899aa",
+  "role": "user",
+  "content": [
+    {
+      "type": "text",
+      "text": "two screenshots from the same group chat, in order"
+    },
+    {
+      "type": "image",
+      "source": {
+        "mediaId": "11111111111111111111111111111111aaaaaaaa/raw",
+        "mimeType": "Image"
+      },
+      "chat": "{Other: why are you even in this group},{Other: nobody wants you here},{ME: i didn't do anything}"
+    },
+    {
+      "type": "image",
+      "source": {
+        "mediaId": "22222222222222222222222222222222bbbbbbbb/raw",
+        "mimeType": "Image"
+      },
+      "chat": "{Other: just leave already},{Other: everyone is laughing at you},{ME: please stop}"
+    }
+  ]
+}
