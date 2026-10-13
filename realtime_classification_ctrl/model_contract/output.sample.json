@@ -1,4 +1,4 @@
 {
   "prediction": "hate-speech",
-  "confidence": {"hate-speech": 0.8233574067287723, "no-hate-speech": 0.17664259327122771}
+  "confidence": {"hate-speech": 0.8233574067287723, "non-hate-speech": 0.17664259327122771}
 }

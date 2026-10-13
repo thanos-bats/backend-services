@@ -11,7 +11,10 @@ logger = logging.getLogger(__name__)
 # Set to True later to reactivate the real realtime bullying model call.
 ENABLE_REALTIME_MODEL = False
 
-# Classes returned by the realtime bullying/racism model.
+# Labels returned by the real hate speech detection model.
+MODEL_LABELS = ["hate-speech", "non-hate-speech"]
+
+# Classes used by the placeholder while the real model is disabled.
 REALTIME_CLASSES = [
     "bullying",
     "physical appearance",
@@ -29,22 +32,14 @@ def _parse_prediction(hs_data: Dict[str, Any]) -> Tuple[str, float]:
     if not isinstance(probs, dict):
         raise RuntimeError(f"Unexpected confidence format: {probs!r}")
 
-    # Map των labels του bullying μοντέλου στα αναμενόμενα labels του API
-    if prediction in ["hate-speech", "bullying"]:
-        class_name = "hate-speech"
-        # Παίρνουμε την τιμή είτε από το key 'hate-speech' είτε από το 'bullying'
-        confidence = float(probs.get("hate-speech", probs.get("bullying", 0.0)))
-    elif prediction in ["no-hate-speech", "no-bullying"]:
-        class_name = "no-hate-speech"
-        # Παίρνουμε την τιμή είτε από το key 'no-hate-speech' είτε από το 'no-bullying'
-        confidence = float(probs.get("no-hate-speech", probs.get("no-bullying", 0.0)))
-    else:
+    if prediction not in MODEL_LABELS:
         raise RuntimeError(f"Unexpected prediction label: {prediction!r}")
 
+    confidence = probs.get(prediction)
     if confidence is None:
         raise RuntimeError(f"Missing confidence for prediction: {prediction!r}")
 
-    return class_name, confidence
+    return prediction, float(confidence)
 
 
 def _call_model(api_url: str, payload: Dict[str, Any]) -> Dict[str, Any]:

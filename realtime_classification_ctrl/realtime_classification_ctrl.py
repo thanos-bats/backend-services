@@ -1,4 +1,5 @@
 import logging
+import sys
 from typing import Any, Dict
 
 from fastapi import Depends, FastAPI, HTTPException
@@ -26,6 +27,8 @@ def realtime_bullying_endpoint(
     token_payload: Dict[str, Any] = Depends(verify_jwt_token),
 ) -> RealtimeClassificationResponse:
     body = raw.model_dump()
+    # Blank line before each request and a dashed line after it keep the log readable.
+    sys.stderr.write("\n")
     logger.info(f"Received /realtime_bullying from sub={token_payload.get('sub')}: {body}")
     simple = simplify_conversation(body)
     try:
@@ -38,3 +41,5 @@ def realtime_bullying_endpoint(
     except Exception as exc:
         logger.exception("Failed processing /realtime_bullying")
         raise HTTPException(status_code=502, detail=f"Error calling realtime bullying service: {exc}")
+    finally:
+        sys.stderr.write("-" * 60 + "\n")

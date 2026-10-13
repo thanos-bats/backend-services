@@ -6,12 +6,12 @@
   "properties": {
     "prediction": {
       "type": "string",
-      "enum": ["hate-speech", "no-hate-speech", "bullying", "no-bullying"],
-      "description": "Predicted label. 'bullying' maps to 'hate-speech' and 'no-bullying' maps to 'no-hate-speech'. Any other value raises an error in the controller."
+      "enum": ["hate-speech", "non-hate-speech"],
+      "description": "Predicted label. Any other value raises an error in the controller."
     },
     "confidence": {
       "type": "object",
-      "description": "Map of label -> probability as a JSON object. Must contain the key matching 'prediction' (e.g. 'hate-speech' or 'bullying').",
+      "description": "Map of label -> probability as a JSON object. Must contain the key matching 'prediction'.",
       "additionalProperties": { "type": "number" }
     }
   },
